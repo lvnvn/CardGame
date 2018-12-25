@@ -120,26 +120,32 @@ void MainWindow::startCard()
 
 void MainWindow::gameLoop()
 {
-    client.turn = std::stoi(client.sendMessage("turn"));
-
     //-2 - игра не окончена; -1 - ничья, другое число - выиграл пользователь с этим id
     int is_over = std::stoi(client.sendMessage("isover"));
     if(is_over == -1)
     {
+        client.active = 0;
         timer2->stop();
         ui->turn->setText("Больше карт в колоде нет. Игра окончена: ничья.");
         return;
     }
     if(is_over >= 0 && is_over != client.id)
     {
+        client.active = 0;
         timer2->stop();
-        ui->turn->setText("Игра окончена: победил игрок номер" + QString::number(is_over));
+        ui->turn->setText("Игра окончена: победил игрок номер " + QString::number(is_over+1));
         return;
     }
-    if(client.turn != client.id)
+
+    client.turn = std::stoi(client.sendMessage("turn"));
+    if(client.turn != client.id || !client.active)
         ui->turn->setText("Ход игрока " + QString::number(client.turn+1));
     else
+    {
+        ui->fres->setText("");
         ui->turn->setText("Ваш ход!");
+    }
+
     startCard();
     updateCardset();
 }
@@ -149,8 +155,9 @@ void MainWindow::buttonClicked()
     QPushButton *button = (QPushButton *)sender();
     int card_number = (button->text().size()==9) ? (button->text()[8].unicode()-'0') :
         ((button->text()[8].unicode()-'0')*10 + button->text()[9].unicode()-'0');
-    if(client.turn != client.id)
+    if(client.turn != client.id || !client.active)
         return;
+
     std::string message = "putcard" + client.cardset[card_number];
     if(client.cardset[card_number].size()==2)  // 'putcard7C ' or 'putcard10C' for same msg size
         message += " ";
@@ -158,7 +165,8 @@ void MainWindow::buttonClicked()
     ui->res->setText(QString::fromUtf8(response.c_str()));
     if(response == "ok")
     {
-        QString path = "/home/daria/cours_nets/DominoCardGame/cards/PNG/" + QString::fromUtf8(client.cardset[card_number].c_str()) + ".png";
+        QString path = "/home/daria/cours_nets/DominoCardGame/cards/PNG/" +
+                QString::fromUtf8(client.cardset[card_number].c_str()) + ".png";
         QPixmap pm(path); // path to image file
         pm = pm.scaled(100,153);
         ui->startcard->setPixmap(pm);
@@ -171,6 +179,7 @@ void MainWindow::buttonClicked()
         {
             client.sendMessage("win");
             timer2->stop();
+            client.active = 0;
             updateCardset();
             ui->turn->setText("Игра окончена: вы победили!");
         }
@@ -179,7 +188,7 @@ void MainWindow::buttonClicked()
 
 void MainWindow::on_getcard_clicked()
 {
-    if(client.turn != client.id)
+    if(client.turn != client.id || !client.active)
         return;
     std::string newcard = client.sendMessage("getcard");
     if(newcard == "none")
@@ -215,7 +224,7 @@ void MainWindow::on_rules_clicked()
 
 void MainWindow::on_finish_clicked()
 {
-    if(client.turn != client.id)
+    if(client.turn != client.id || !client.active)
         return;
     std::string response = client.sendMessage("finishmove");
     ui->fres->setText(QString::fromUtf8(response.c_str()));

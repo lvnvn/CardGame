@@ -20,19 +20,6 @@ std::string Client::sendMessage(std::string message) {
     return response;
 }
 
-/*std::string Client::getResponce()
-{
-    char response[FILESIZE_LEN];
-    for(int i = 0; i < FILESIZE_LEN; i++)
-        response[i] = 0;
-    int n = read(sock, response, sizeof(response));
-    while(n<0)
-        n = read(sock, response, sizeof(response));
-    //std::cout << "\ngot message: " << response;
-    return response;
-}*/
-
-
 int Client::start() {
     srand(time(NULL));
 
@@ -57,15 +44,7 @@ int Client::start() {
         perror("Error in connect():");
         return -1;
     }
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-
-    /*if (sendMessage(sock,std::string("abcdef"))) {
-    printf("Error in send_message");
-    return -1;
-    }
-
-    printf("Client closed\n");
-    return 0;*/
+    //fcntl(sock, F_SETFL, O_NONBLOCK);
 }
 
 

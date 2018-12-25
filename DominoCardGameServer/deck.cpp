@@ -49,7 +49,7 @@ std::string Deck::takeSeven()
 std::string Deck::takeCard()
 {
     int first = 0;
-    while(mixed_deck[first].rang == -1)
+    while(mixed_deck[first].rang == -1 && first < 52)
         first++;
     if(first == 52) // колода закончилась
         return "none";

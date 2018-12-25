@@ -17,7 +17,7 @@
 #include <vector>
 
 #define MSG_LEN 2048
-#define FILESIZE_LEN 64
+#define FILESIZE_LEN 100
 #define SOCK_ADDR "localhost"
 #define SOCK_PORT 31337
 #define FILENAME "file.txt"

@@ -35,46 +35,36 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
     if(recvSize > 0)
     {
         msg[recvSize] = '\0';
-        //std::cout << "\ngot message: '" << msg << "' from client [" << client_id << "]";
+        char response[FILESIZE_LEN];
+        memset(response, 0, FILESIZE_LEN);
+        //std::cout << "\n\ngot message: '" << msg << "' from client [" << client_id << "]";
         if(!strncmp(msg,"start",5))
         {
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             sprintf(response, "%u", (unsigned)client_id);
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"isover",6))
         {
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
-            if(game_is_on == 1)
+            if(game_is_on)
                 sprintf(response, "%d", -2);
             else
                 sprintf(response, "%d", winner);
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"wait",4))
         {
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             if(!game_is_on)
                 sprintf(response, "%u", 0);
             else
                 sprintf(response, "%u", 1);
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"cardset",7))
         {
             std::string cardset = deck.takeSeven();
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             for(int i = 0; i < cardset.size(); i++)
                 response[i] = cardset[i];
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"scard",5))
         {
@@ -86,8 +76,6 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
                 start_card.suit = (startcard.size()==3) ? startcard[2] : startcard[1];
                 start_card.rang = (startcard.size()==3) ? std::stoi(startcard.substr(0,2)) : (startcard[0]-'0');
             }
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             if(start_card.rang > 9)
             {
                 response[0] = start_card.rang/10 + '0';
@@ -100,43 +88,36 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
                 response[1] = start_card.suit;
             }
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"getcard",7))
         {
             std::string card = deck.takeCard();
             if(card == "none")
+            {
                 game_is_on = 0;
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
+                winner = -1;
+            }
             for(int i = 0; i < card.size(); i++)
                 response[i] = card[i];
             write(fd,response,sizeof(response));
             lastmove = 1;
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"turn",4))
         {
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             sprintf(response, "%u", turn);
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"finishmove",10))
         {
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             if(lastmove == -1 || lastmove == 2)
-                sprintf(response,"Чтобы закончить ход необходимо взять карту");
+                sprintf(response,"Чтобы закончить ход необходимо взять карту!");
             else
             {
                 turn = (turn+1)%3;
                 lastmove = -1;
-                sprintf(response, "ok");
+                sprintf(response, "Ваш ход завершён.");
             }
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"putcard",7))
         {
@@ -150,8 +131,6 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
                 cd.rang = (msg[7]-'0')*10 + (msg[8]-'0');
                 cd.suit = msg[9];
             }
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             if((abs(cd.rang - start_card.rang) == 1) || (abs(cd.rang - start_card.rang) == 12)) // карту можно положить
             {
                 sprintf(response, "ok");
@@ -165,17 +144,13 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
             else
                sprintf(response, "Этой картой нельзя сходить");
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"win",3))
         {
             winner = client_id;
             game_is_on = 0;
-            char response[FILESIZE_LEN];
-            memset(response, 0, FILESIZE_LEN);
             sprintf(response, "0");
             write(fd,response,sizeof(response));
-            //std::cout << "\nresponded: " << response;
         }
         if(!strncmp(msg,"end",3)) // disconnect
         {
@@ -187,6 +162,7 @@ void Server::manageClient(unsigned int fd, unsigned int client_id) {
             close(fd);
             clients[client_id] = 0;
         }
+       // std::cout << "\nresponded: " << response << " game_is_on: " << game_is_on << " turn " << turn << " winner " << winner;
     }
 }
 
