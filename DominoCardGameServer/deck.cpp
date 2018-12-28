@@ -2,10 +2,10 @@
 #include <random>
 #include <set>
 #include <iostream>
+#include <time.h>
 
 Deck::Deck()
 {
-    srand(time(0));
     std::set<int> used_cards;
     card next;
 
